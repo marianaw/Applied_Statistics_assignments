@@ -126,9 +126,111 @@ summary(analysis)
 # Con un p-valor de 0.0443 se rechaza la hipótesis nula de que las medias son todas iguales.
 
 # -----------------------------------------------------------------------------------------------------------------------
-# e)
+# e) Verifique los supuestos requeridos para el análisis estadístico.
+
+df_residuals = resid(model)
 
 # Probamos el supuesto de normalidad:
-qqnorm(residuals(model))
-qqline(residuals(model))
+qqnorm(df_residuals)
+qqline(df_residuals)
 
+# Probamos el supuesto de homocedasticidad de varianzas:
+plot(fitted(model), df_residuals, xlab = 'Valores predichos', ylab = 'Residuos')
+
+# Comprobamos que los supuestos de normalidad y homocedasticidad de la varianza se cumplen.
+# Miramos ahora el supuesto de aditividad bloque-tratamiento:
+ggplot(data = df, aes(x = Bloque, y = Rendimiento, shape = Insecticida, group = Insecticida, linetype = Insecticida)) +
+  stat_summary(fun.y = mean, geom = "point") + 
+  stat_summary(fun.y = mean, geom = "line") + 
+  xlab('Bloques') +
+  ylab('Promedio por bloque')
+
+ggplot(data = df, aes(x = Insecticida, y = Rendimiento, shape = Bloque, group = Bloque, linetype = Bloque)) +
+  stat_summary(fun.y = mean, geom = "point") + 
+  stat_summary(fun.y = mean, geom = "line") + 
+  xlab('Bloques') +
+  ylab('Promedio por bloque')
+
+# Los gráficos sugiere que hay múltiples interacciones entre los bloques y los tratamientos.
+
+# -----------------------------------------------------------------------------------------------------------------------
+# f) Obtenga las pruebas a “posteriori” de Fisher y DGC. Compare los resultados de ambas.
+
+# Fisher:
+library(agricolae)
+t = LSD.test(df$Rendimiento, df$Bloque, 1.276, 0.07)
+t
+
+# DGC:
+source("~/Documents/MestriaUNC/DiseñoExperimentos/Pr/R/MDSGC.r")
+dgc = gDGC(df)
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 4-------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+# Se realizó un experimento en invernáculo con cinco macetas de trébol rojo por tratamiento. Los primeros cinco tratamientos están
+# integrados por distintas cepas de Rhizobium trifolii y el sexto es una mezcla de las cinco cepas anteriores. 
+# Se midió el contenido de nitrógeno en las plantas de cada maceta. Los datos obtenidos se presentan en la siguiente tabla.
+
+library(reshape)
+# d) Probar la desigualdad de las medias.
+#Realizamos el análisis de la varianza:
+df = read.csv('ex_4.csv')
+df$Bloques = c('B1', 'B2', 'B3', 'B4', 'B5')
+melted = melt(df)
+names(melted) = c('Bloques', 'Tratamiento', 'Value')
+fit = lm(Value ~ Bloques + Tratamiento, data = melted)
+summary(fit)
+anova(fit)
+
+suma_cuadrados_bloques = function(df){
+  num_tratamientos = length(names(df))
+  medias_bloque = rowMeans(df)
+  media_total = sum(df)/(length(df) * length(row.names(df)))
+  desvio_bloque = medias_bloque - media_total
+  scb = num_tratamientos * sum((medias_bloque - media_total)**2)
+  scb
+}
+
+suma_cuadrados_tratamientos = function(df){
+  num_bloques = length(row.names(df))
+  medias_tratamiento = colMeans(df)
+  media_total = sum(df)/(length(df) * length(row.names(df)))
+  desvio_tratamientos = medias_tratamiento - media_total
+  sctr = num_bloques * sum((medias_tratamiento - media_total)**2)
+  sctr
+}
+
+#-------------------------------------------------------------------------------------------------------
+# e) Verificar los supuestos.
+
+# Normalidad:
+df_residuals = resid(fit)
+
+# Probamos el supuesto de normalidad:
+qqnorm(df_residuals)
+qqline(df_residuals)
+# El gráfico luce normal.
+
+# Probamos el supuesto de homocedasticidad de varianzas:
+plot(fitted(fit), df_residuals, xlab = 'Valores predichos', ylab = 'Residuos')
+# Los residuos lucen como uniformemente distribuidos sin ningún patrón a la vista.
+
+# Ahora miramos la interacción bloque-tratamiento:
+ggplot(data = melted, aes(x = Tratamiento, y = Value, shape = Bloques, group = Bloques, linetype = Bloques)) +
+  stat_summary(fun.y = mean, geom = "point") + 
+  stat_summary(fun.y = mean, geom = "line") + 
+  xlab('Bloques') +
+  ylab('Promedio por bloque')
+# Al correr el test de Tukey vemos que no hay interacción (¿en el gráfico si?):
+tukey.add.test(melted$Value, melted$Tratamiento, melted$Bloques)
+TukeyHSD(anova_fit, conf.level = 0.95)
+
+#-------------------------------------------------------------------------------------------------------
+# f) Conclusiones:
+# Dado que el p-valor es de los tratamientos es menor a 0.05 concluimos que hay diferencias significativas entre los tratamientos.
+
+#-------------------------------------------------------------------------------------------------------
+# g) Gráfico de box-plot.
+plot = ggplot(melted, aes(x = Tratamiento, y= Value)) + xlab('Tratamiento') + ylab('Contenido de nitrógeno')
+plot + geom_boxplot()
