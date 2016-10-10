@@ -113,17 +113,17 @@ fisher.test()
 df = read.csv('ex_3_insecticidas_parcelas.csv')
 names(df)
 
-# La primera columna corresponde a los bloques, que son cuatro, la segunda a los niveles del factor insecticida, y la tercera a
-# los diferentes rendimientos.
-
-df$Bloque = factor(df$Bloque, labels = c('Bloque_1', 'Bloque_2', 'Bloque_3', 'Bloque_4'))
 df$Insecticida = factor(df$Insecticida, labels = c('A', 'B', 'C', 'D', 'E', 'F', 'G'))
 
-model = lm(df$Rendimiento ~ df$Bloque + df$Insecticida)
+model = lm(df$Rendimiento ~ df$Insecticida)
 analysis = aov(model)
 summary(analysis)
 
-# Con un p-valor de 0.0443 se rechaza la hipótesis nula de que las medias son todas iguales.
+# Con un p-valor menor a 0.05 se rechaza la hipótesis nula de que las medias son todas iguales.
+# El siguiente gráfico ya sugiere grandes diferencias entre las medias de los tratamientos:
+plot = ggplot(df, aes(x=Insecticida, y=Rendimiento))
+plot + geom_boxplot()
+
 
 # -----------------------------------------------------------------------------------------------------------------------
 # e) Verifique los supuestos requeridos para el análisis estadístico.
@@ -133,37 +133,30 @@ df_residuals = resid(model)
 # Probamos el supuesto de normalidad:
 qqnorm(df_residuals)
 qqline(df_residuals)
+# Todo luce normal.
 
 # Probamos el supuesto de homocedasticidad de varianzas:
 plot(fitted(model), df_residuals, xlab = 'Valores predichos', ylab = 'Residuos')
-
-# Comprobamos que los supuestos de normalidad y homocedasticidad de la varianza se cumplen.
-# Miramos ahora el supuesto de aditividad bloque-tratamiento:
-ggplot(data = df, aes(x = Bloque, y = Rendimiento, shape = Insecticida, group = Insecticida, linetype = Insecticida)) +
-  stat_summary(fun.y = mean, geom = "point") + 
-  stat_summary(fun.y = mean, geom = "line") + 
-  xlab('Bloques') +
-  ylab('Promedio por bloque')
-
-ggplot(data = df, aes(x = Insecticida, y = Rendimiento, shape = Bloque, group = Bloque, linetype = Bloque)) +
-  stat_summary(fun.y = mean, geom = "point") + 
-  stat_summary(fun.y = mean, geom = "line") + 
-  xlab('Bloques') +
-  ylab('Promedio por bloque')
-
-# Los gráficos sugiere que hay múltiples interacciones entre los bloques y los tratamientos.
+# Todo luce homocedástico.
 
 # -----------------------------------------------------------------------------------------------------------------------
 # f) Obtenga las pruebas a “posteriori” de Fisher y DGC. Compare los resultados de ambas.
 
 # Fisher:
 library(agricolae)
-t = LSD.test(df$Rendimiento, df$Bloque, 1.276, 0.07)
+t = LSD.test(df$Rendimiento, df$Insecticida, DFerror = 1.977, MSerror = 0.0942)
 t
+
+# Tukey:
+TukeyHSD(analysis)
 
 # DGC:
 source("~/Documents/MestriaUNC/DiseñoExperimentos/Pr/R/MDSGC.r")
-dgc = gDGC(df)
+dgc = gDGC(df) # Esto no funciona bien, la matriz de distancias se llena de NaNs.
+
+# Conclusión: muchas medias son significativamente distintas entre sí. El insecticida B fue el que mejor rendimiento tuvo, y el
+# G el que peor funcionó, estando lejos de las medias de todos los demás grupos.
+
 
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------Ejercicio 4-------------------------------------------------
@@ -176,30 +169,38 @@ library(reshape)
 # d) Probar la desigualdad de las medias.
 #Realizamos el análisis de la varianza:
 df = read.csv('ex_4.csv')
-df$Bloques = c('B1', 'B2', 'B3', 'B4', 'B5')
 melted = melt(df)
-names(melted) = c('Bloques', 'Tratamiento', 'Value')
-fit = lm(Value ~ Bloques + Tratamiento, data = melted)
+names(melted) = c('Tratamiento', 'Nitrógeno')
+fit = lm(Nitrógeno ~ Tratamiento, data = melted)
 summary(fit)
 anova(fit)
 
-suma_cuadrados_bloques = function(df){
-  num_tratamientos = length(names(df))
-  medias_bloque = rowMeans(df)
-  media_total = sum(df)/(length(df) * length(row.names(df)))
-  desvio_bloque = medias_bloque - media_total
-  scb = num_tratamientos * sum((medias_bloque - media_total)**2)
-  scb
-}
+# Hacemos las cuentas manualmente:
+# Fuente: tratamientos:
+medias_tratamiento = colMeans(df)
+media_total = sum(df)/(length(names(df)) * length(df$t1))
+num_tratamientos = 6
+num_repeticiones = 5
+N = 30
+SCTr = num_repeticiones * sum((medias_tratamiento - media_total)**2)
 
-suma_cuadrados_tratamientos = function(df){
-  num_bloques = length(row.names(df))
-  medias_tratamiento = colMeans(df)
-  media_total = sum(df)/(length(df) * length(row.names(df)))
-  desvio_tratamientos = medias_tratamiento - media_total
-  sctr = num_bloques * sum((medias_tratamiento - media_total)**2)
-  sctr
-}
+gl_tratamiento = num_tratamientos - 1
+CMTr = SCTr/gl_tratamiento
+
+# Fuente: error total:
+error_total = sum((df - media_total) ** 2)
+CMT = error_total/(N-1)
+
+# Fuente: error experimental:
+error_experimental = error_total - SCTr
+gl_experimental = (N - num_tratamientos)
+CME = error_experimental/gl_experimental
+
+# Estadístico F:
+F = CMTr/CME
+# Todo salió bien.
+# Miramos en la tabla F_5;24;0.05 = 2.10. Al ser nuestro estadístico mayor se rechaza la hipótesis nula.
+# Además vemos que P(>F) es menor que 0.05, por lo que la hipótesis nula se rechaza para alfa = 0.05.
 
 #-------------------------------------------------------------------------------------------------------
 # e) Verificar los supuestos.
@@ -212,25 +213,252 @@ qqnorm(df_residuals)
 qqline(df_residuals)
 # El gráfico luce normal.
 
-# Probamos el supuesto de homocedasticidad de varianzas:
+# Probamos el supuesto de homocedasticidad de varianzas con un s-l plot:
 plot(fitted(fit), df_residuals, xlab = 'Valores predichos', ylab = 'Residuos')
 # Los residuos lucen como uniformemente distribuidos sin ningún patrón a la vista.
 
-# Ahora miramos la interacción bloque-tratamiento:
-ggplot(data = melted, aes(x = Tratamiento, y = Value, shape = Bloques, group = Bloques, linetype = Bloques)) +
-  stat_summary(fun.y = mean, geom = "point") + 
-  stat_summary(fun.y = mean, geom = "line") + 
-  xlab('Bloques') +
-  ylab('Promedio por bloque')
-# Al correr el test de Tukey vemos que no hay interacción (¿en el gráfico si?):
-tukey.add.test(melted$Value, melted$Tratamiento, melted$Bloques)
-TukeyHSD(anova_fit, conf.level = 0.95)
-
-#-------------------------------------------------------------------------------------------------------
 # f) Conclusiones:
 # Dado que el p-valor es de los tratamientos es menor a 0.05 concluimos que hay diferencias significativas entre los tratamientos.
+# Esto quiere decir que los niveles de nitrógeno varían significativamente entre las cepas.
+
+plot = ggplot(melted, aes(x = Tratamiento, y= Nitrógeno)) + xlab('Tratamiento') + ylab('Contenido de nitrógeno')
+plot + geom_boxplot()
+# En el gráfico de boxplot podemos ver cómo el nivel de nitrógeno de la cepa nro. 1 es mucho mayor en promedio que el de las 
+# demás.
 
 #-------------------------------------------------------------------------------------------------------
 # g) Gráfico de box-plot.
 plot = ggplot(melted, aes(x = Tratamiento, y= Value)) + xlab('Tratamiento') + ylab('Contenido de nitrógeno')
 plot + geom_boxplot()
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 5-------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+
+df = read.csv('ex_5.csv')
+df$Bloques = c('b1', 'b2', 'b3', 'b4')
+melted = melt(df)
+df$Bloques = NULL
+
+# d) ANAVA
+# Manualmente:
+source("utils.r")
+SCB = suma_cuadrados_bloques(df)
+SCTr = suma_cuadrados_tratamientos(df)
+SCT = suma_cuadrados_total(df)
+SCE = SCT - SCTr - SCB
+
+a = 6
+b = 4
+N = 24 
+
+gl_bloques = b - 1
+gl_tratamientos = a - 1
+gl_total = a*b - 1
+gl_error = (a-1) * (b-1)
+
+CMB = SCB/gl_bloques
+CMTr = SCTr/gl_tratamientos
+CMT = SCT/gl_total
+CME = SCE/gl_error
+
+F_tratamiento = CMTr/CME
+
+# Con las funciones de R:
+model = lm(value~ Bloques + variable, melted)
+an = anova(model)
+# El anova muestra que hay diferencias significativas entre los pesos de las plantas para diferentes niveles de salinidad.
+
+#-------------------------------------------------------------------------------------------------------
+# e) Comprobamos los supuestos:
+# Normalidad de los residuos:
+residuos = resid(model)
+qqnorm(residuos)
+qqline(residuos)
+# Los residuos no parecen ser normales.
+
+# Homogeneidad de varianzas.
+spread_location_plot(melted, 'Bloques', 'variable', 'value')
+# Se puede percibir un patrón de embudo en los residuos que indica falta de homocedasticidad de varianzas.
+
+
+# Comprobamos que los supuestos de normalidad y homocedasticidad de la varianza se cumplen.
+# Miramos ahora el supuesto de aditividad bloque-tratamiento:
+ggplot(data = melted, aes(x = Bloques, y = value, shape = variable, group = variable, linetype = variable)) +
+  stat_summary(fun.y = mean, geom = "point") + 
+  stat_summary(fun.y = mean, geom = "line") + 
+  xlab('Bloques') +
+  ylab('Promedio por tratamiento')
+
+ggplot(data = melted, aes(x = variable, y = value, shape = Bloques, group = Bloques, linetype = Bloques)) +
+  stat_summary(fun.y = mean, geom = "point") + 
+  stat_summary(fun.y = mean, geom = "line") + 
+  xlab('Salinidad') +
+  ylab('Promedio por bloque')
+
+#-------------------------------------------------------------------------------------------------------
+# f) Dado que los supuestos no se cumplen concluimos que el análisis realizado no es adecuado para este problema.
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 6-------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+df = read.csv('ex_6.csv')
+melted = melt(df)
+names(melted) = c('Bloques', 'Tratamientos', 'Valores')
+melted$Bloques = factor(melted$Bloques)
+melted$Tratamientos = factor(melted$Tratamientos)
+
+
+# d) Transformación arcoseno en los datos:
+melted$Arcsin_tr = asin(sqrt(melted$Valores/100))
+# Verificamos nuevamente los supuestos de normalidad y homocedasticidad de varianzas:
+# Normalidad:
+asin_fit = lm(Arcsin_tr ~ Bloques + Tratamientos, data = melted)
+summary(asin_fit)
+asin_residuals = resid(asin_fit)
+qqnorm(asin_residuals)
+qqline(asin_residuals)
+# Luce bastante normal. Ahora varianza:
+spread_location_plot(melted, 'Bloques', 'Tratamientos', 'Arcsin_tr')
+# El comportamiento ahora sí luce aleatorio.
+
+#-------------------------------------------------------------------------------------------------------
+# e) Comparar el control con el promedio de los demás tratamientos.
+
+# Lo hacemos mediante contrastes con coefficientes 3, -1, -1, -1 para el control y las demás respectivamente.
+levels(melted$Tratamientos)  # El nivel A es el control.
+
+c1 <- c(3, -1, -1, -1)
+
+mat = cbind(c1)
+contrasts(melted$Tratamientos) = mat
+contrastes <- lm(Valores ~ Tratamientos, data=melted)
+summary(contrastes)
+
+attributes(contrastes$qr$qr)$contrasts
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 7-------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+df = read.csv('ex_7.csv')
+melted = melt(df)
+names(melted) = c('Insecticida', 'Bloque', 'Plantulas')
+
+#d) ¿Los insecticidas producen distintos efectos?
+anova(lm(Plantulas ~ Insecticida + Bloque, data = melted))
+# El anova muestra que no hay diferencias significativas entre tratamientos, o sea, entre tipos de insecticidas.
+
+#-------------------------------------------------------------------------------------------------------
+# e) Eficiencia relativa:
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 9-------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+# d) ANAVA:
+
+df = read.csv('ex_9.csv')
+names(df) = c('Almacenamiento', 'Humedad', 'Viabilidad')
+df$Almacenamiento = factor(df$Almacenamiento)
+df$Humedad = factor(df$Humedad)
+
+anova(lm(Viabilidad ~ Almacenamiento * Humedad, data=df))
+
+# Vemos que no hay interacción, pero sí diferencias significativas entre las medias de cada tratamiento.
+
+#-------------------------------------------------------------------------------------------------------
+# e) Gráfico de valores medios de la respuesta según los factores.
+# medias por humedad:
+medias_humedad = aggregate(df$Viabilidad, by=list(df$Humedad), mean)
+medias_almacen = aggregate(df$Viabilidad, by=list(df$Almacenamiento), mean)
+plot(levels(df$Humedad), medias_humedad$x, col='red')
+plot(levels(df$Almacenamiento), medias_almacen$x, col='blue')
+
+#-------------------------------------------------------------------------------------------------------
+# f) Comprobamos los supuestos:
+
+# Normalidad de residuos:
+model = lm(Viabilidad ~ Almacenamiento + Humedad + Almacenamiento * Humedad, data=df)
+residuos = resid(model)
+qqnorm(residuos)
+qqline(residuos)
+
+# Homocedasticidad de varianzas:
+df$medias_celdas = ave(df$Viabilidad, df$Almacenamiento, df$Humedad)
+df$Residuos = df$Viabilidad - df$medias_celdas
+plot(df$medias_celdas, df$Residuos)
+# PREGUNTAR ESTO.
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 11------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+df = read.csv('ex_11.csv')
+melted = melt(df, id.vars = c('Cerdos', 'Cerdas'))
+
+# d) ANAVA:
+analysis = aov(lm(value ~ Cerdas + Cerdas/Cerdos, data = melted))
+summary(analysis)
+
+#-------------------------------------------------------------------------------------------------------
+# e) Comprobamos los supuestos:
+
+#-------------------------------------------------------------------------------------------------------
+# d) 
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 13------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+
+# c) ANAVA:
+df = read.csv('ex_13.csv')
+anova_df = anova(lm(perimetro ~ virus*riego, data = df))
+
+# d) Conclusiones:
+# No resultó significativa la interacción pero sí cada factor.
+# Test de fisher:
+a = LSD.test(aov(perimetro ~ virus*riego, data = df), 'virus', group = TRUE)
+b = LSD.test(aov(perimetro ~ virus*riego, data = df), c('virus', 'riego'), group = TRUE)
+b
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 14------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+
+df = read.csv('ex_14.csv')
+
+# Para realizar el análisis de la covarianza incluimos en el análisis una regresión con la variable vecinos como covariable:
+mod_regr = lm(Increm. ~ vecinos, data = df)
+
+# El modelo completo para el ancova es:
+mod_completo = lm(Increm. ~ Especie + vecinos, data = df)
+
+# ANAVA:
+anova(mod_completo, mod_regr)
+anova(mod_completo)
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------Ejercicio 15------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+
+# a)
+# Miremos qué pasa si no usamos la covariable:
+anova(aov(Increm. ~ Especie, data = df))
+
+# b)
+# Notar que el error experimental es muchísimo más grande esta vez.
+
+# c)
+# Veamos qué relación hay entre la variable vecinos y la respuesta Increm.:
+mod_regr
+summary(mod_regr)
+
+# Vemos que el test fue significativo, con lo que podemos concluir que hay una relación lineal entre los vecinos y 
+# la variable respuesta de incremento.
+plot(df$vecinos, df$Increm.)
