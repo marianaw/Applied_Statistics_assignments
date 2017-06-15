@@ -3,6 +3,9 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{subfig}
+\usepackage{listings}
+\usepackage{verbatim}
+
 
 %opening
 \title{TP. 1 MOEA}
@@ -60,12 +63,16 @@ Hemos analizado cinco modelos que describiremos a continuación.
   Las salidas sugieren que tanto el tratamiento como el año son significativos, no así la interacción entre ellos. Los bloques tampoco lo son, aunque el 
   efecto aleatorio de interacción entre bloques y tratamiento, si. 
   
- \item \textbf{Segundo modelo.} El modelo se ve como el anterior, sólo que esta vez modelamos los datos como datos longitudinales: con el comando
- \verb repeated  le decimos a SAS que el nivel $tratamiento * bloque$ (que llamaremos $p$ por conveniencia) se repite a través del factor $anio$. La estructura
- de covarianzas es de simetría compuesta. Este modelo es prácticamente equivalente al anterior (observar que las estimaciones son casi iguales), 
- la diferencia reside en que en
- este caso estamos introduciendo todos los efectos aleatorios en la matriz $R$, cuya diagonal consistirá de estimaciones de $\sigma^2 + \sigma^2_p$ y 
- estimaciones de $\sigma^2_p$ en los demás lugares.
+ \item \textbf{Segundo modelo.} La ecuación de este modelo es
+ \begin{equation}
+      y_{i,j,k} = \mu + a_i + t_j + b_k + (at)_{i,j} + \epsilon_{i,j,k}
+    \end{equation}
+ La principal diferencia con el anterior es que esta vez consideramos los datos como datos longitudinales: con el comando
+ \verb repeated  le decimos a SAS que el nivel $tratamiento * bloque$ (que llamaremos $p$ por conveniencia) se repite a través del factor $anio$. Es decir,
+ las instancias de esta interacción serán nuestros sujetos. 
+ Debido a que elegimos una estructura de covarianzas de simetría compuesta el resultado es prácticamente equivalente al anterior 
+ (observar que las estimaciones son casi iguales).
+ Lo que ha cambiado es cómo hemos introducido las varianzas. En este caso la matriz $R$ será
   \[
   R = \\
   \begin{bmatrix}
@@ -75,9 +82,11 @@ Hemos analizado cinco modelos que describiremos a continuación.
       \sigma^2_p & \sigma^2_p & \dots  & \sigma^2 + \sigma^2_p
   \end{bmatrix}
   \]
-  Notar que $G = 0$. Lo que estamos diciendo es que una observación de $p$ está correlacionada con la misma observación en años distintos.
+  y $G = 0$. Esto significa que la covarianza de una observación de $p$ en años distintos es aproximadamente $\sigma^2_p$, que dos observariones distintas
+  tienen correlación 0, y que la varianza de las observaciones es constante.
   
-  \item \textbf{Tercer modelo.} En este modelo se propone otra estructura de covarianzas: la autorregresiva de orden 1. Esto quiere decir que la matriz
+  \item \textbf{Tercer modelo.} Este modelo tiene la misma ecuación que el anterior, aunque se propone otra estructura de covarianzas: 
+  la autorregresiva de orden 1. Esto quiere decir que la matriz
   de varianzas y covarianzas será
   \[
   R = \\
@@ -89,26 +98,27 @@ Hemos analizado cinco modelos que describiremos a continuación.
   \end{bmatrix}
   \]
   de modo que se estimarán los parámetros $\sigma$ y $\rho$. Los criterios de verosimilitud AIC, AICC, y BIC indican que este modelo es el mejor de los que
-  hasta ahora mencionamos. Los $p$-valores indican que el tratamiento, el año, la interacción entre ellos, y la interacción bloque-tratamiento son 
+  hasta ahora mencionamos. Los $p$-valores indican que el tratamiento, el año, y la interacción entre ellos son 
   significativos.
   
-  \item \textbf{Cuarto modelo.} Podemos decir que hemos seleccionado la estructura de covarianzas autorregresiva de orden 1, por lo que podemos concentrarnos
-  en ajustar los parámetros. Ajustamos entonces un modelo polinomial de orden dos en el factor año, que ahora consideramos continuo. 
+  \item \textbf{Cuarto modelo.} Seleccionamos la estrucutra de covarianzas autorregresiva de orden 1, y nos concentramos en ajustar los parámetros del 
+  modelo de medias. En este caso tratamos al año como una variable continua e incluimos un término cuadrático, por lo tanto estimamos también coeficientes
+  de regresión. La ecuación es:
   \begin{equation*}
-   y_{i,j,k} = \mu + a_i + t_j + b_k + a^2_i + (a^2 t)_{i,j} +(at)_{i,j} + (tb)_{j,k} + \epsilon_{i,j,k}
+   y_{i,j,k} = \mu + c_1 a + t_j + b_k + c_2 a^2 + c_2 (a^2 t_j) + c_1 (at_j) + (tb)_{j,k} + \epsilon_{j,k}
   \end{equation*}
+  En la ecuación, $a$ es la covariable año y $c_1$, $c_2$ son coeficientes de regresión a estimar.
   Observar que en este modelo estamos incluyendo el intercepto, lo que significa que estamos ajustando una estructura de medias que tiene la forma de una
-  media general más los desvíos. El año, el año al cuadrado, el tratamiento, y la interacción entre estos resultaron significativos.
+  media general más los desvíos. El año, el año al cuadrado, el tratamiento, y la interacción entre estos resultaron significativos. Esto nos dice que 
+  los datos tienen un comportamiento cuadrático con respecto al año.
   Además observamos que los criterios de verosimilitud indican que este modelo ajusta mejor que el anterior.
   
-  \item \textbf{Quinto modelo.} En este modelo no incluimos intercepto, lo que significa que estamos modelando las medias directamente. 
+  \item \textbf{Quinto modelo.} En este modelo no incluimos intercepto, es decir, modelamos las medias directamente. 
   \begin{equation*}
-   y_{i,j,k} = a_i + t_j + b_k + a^2_i + (a^2 t)_{i,j} +(at)_{i,j} + (tb)_{j,k} + \epsilon_{i,j,k}
+   y_{j,k} = c_1 a + t_j + b_k + c_2 a^2 + c_2 (a^2 t_j) + c_1 (at_j) + (tb)_{j,k} + \epsilon_{j,k}
   \end{equation*}
   Cada componente representa la media de esa sub-muestra.
-  El resultado es un modelo equivalente al anterior, es decir, que da las mismas estimaciones, con la diferencia de que no estamos modelando desvíos.
-  Para cada tratamiento se 
-  ajustó un modelo polinomial en el año que describe el comportamiento de las alturas promedio de los árboles con respecto al paso de los años.
+  El resultado es un modelo equivalente al anterior, con las mismas estimaciones, con la diferencia de que no estamos modelando desvíos.
 \end{itemize}
 
 
@@ -117,48 +127,123 @@ Hemos analizado cinco modelos que describiremos a continuación.
 
 Lo que observamos es una interacción significativa entre el año y el tratamiento, lo que implica que las alturas de los árboles se comportan de distinta
 manera a través de los años para distintos tratamientos. Si hiciécemos un gráfico de promedio de altura vs. años veríamos que las curvas no sería 
-paralelas, sino que más bien tenderían a cruzarse en algún momento.
-El modelo que mejor ajusta es el cuarto: el que asume una estructura de covarianzas autorregresiva de orden uno y el factor $anio$ como una variable 
+paralelas, sino que más bien tenderían a cruzarse en algún momento. Además notamos que la interacción entre el tratamiento y término cuadrático del año es
+significativa con coeficientes negativos, lo que sugiere que hay una tendencia cuadrática negativa en la evolución de las alturas con respecto al paso de
+los años.
+Los modelos que mejor ajustan son el cuarto y el quinto, que asumen una estructura de covarianzas autorregresiva de orden uno y el factor $anio$ como una variable 
 continua para la que se ajustan tendencias polinomiales. Lo que asumimos es que las varianzas de los residuos, $\sigma^2$, son constantes, y que la covarianza
 de los residuos de dos observaciones separadas por $t$ años es de $\sigma^2 \rho^t$.
+Ambos modelos son equivalentes. Podríamos seleccionar el cuarto para entender los factores como desvíos de una media general.
 
 \section{Resultados estadísticos (problemas 3 y 4)}
 
 Podemos concluir que el crecimiento de los árboles está relacionado con el tiempo que transcurre (en años), que, al ser una variable continua, nos provee
-de una tasa de crecimiento anual que en este caso es del $68\%$ aproximadamente. Cada tratamiento tiene un estimador diferente para la interacción con el 
-año y con el año al cuadrado, esto quiere decir que a medida que pasan los años cada tratamiento impone una ``corrección'' sobre la tasa anual general, que
-en todos los casos es negativa excepto en tres casos, en dos de los cuales es cero. El resultado es que en general las curvas son parábolas en las que puede
-verse que el crecimiento de los árboles, en la mayoría de los casos, es cada vez menor.
-Si lo que nos interesa es elegir la plantación que al término de estos siete años en los que los datos fueron observados, ha producido la mayor altura
-promedio, basta con hacer los cálculos de la altura promedio alcanzada al cabo de siete años sin tener en cuenta los bloques, que no fueron significativos:
-\begin{itemize}
- \item Tratamiento 1: $3.36 m$
- \item Tratamiento 2: $3.35 m$
- \item Tratamiento 3: $3.35 m$
- \item Tratamiento 4: $3.492 m$
- \item Tratamiento 5: $3.87 m$
-\end{itemize}
+de una tasa de crecimiento anual que en este caso es del $68\%$ aproximadamente. 
+Los coeficientes de interacción entre el año y el tratamiento, y el año al cuadrado y el tratamiento imponen una ``corrección'' sobre esta tasa anual 
+general. En la mayoría de los casos los coeficientes son negativos, excepto en tres, dos de los cuales tienen coeficiente cero. Esto nos dice que el 
+crecimiento de los árboles se va desacelerando a medida que pasan los años.
 
-El último tratamiento sólo depende de su intercepto ya que las interacciones con el año y el año al cuadrado tienen coeficiento cero. Concluimos que la
-plantación con mayor tasa de crecimiento en siete años fue aquella que combinó cerezo con alisos en baja proporción.
-Este resultado podría ser diferente para más o menos años transcurridos.
+Para decidir qué tratamiento fue mejor al cabo de siete años debemos estudiar las medias de las alturas del último año, en particular si la diferencia
+entre ellas resulta significativa.
+Las medias del séptimo año son:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rlr}
+  \hline
+ & Tratamiento & Altura Promedio \\ 
+  \hline
+  1 & 1 & 3.40 \\ 
+  2 & 2 & 3.38 \\ 
+  3 & 3 & 3.38 \\ 
+  4 & 4 & 3.52 \\ 
+  5 & 5 & 3.90 \\ 
+   \hline
+\end{tabular}
+\end{table}
+
+Usamos el test LSD de Fisher para estudiar la diferencia de medias. Ajustamos un modelo lineal sobre los datos del año 7, realizamos un anova y 
+corremos el comando \verb LSD.test  del paquete \verb agricolae .
+El resultado es:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rlrl}
+  \hline
+ & trt & means & M \\ 
+  \hline
+  1 & 5 & 3.90 & a \\ 
+  2 & 4 & 3.52 & b \\ 
+  3 & 1 & 3.40 & b \\ 
+  4 & 3 & 3.38 & b \\ 
+  5 & 2 & 3.38 & b \\ 
+   \hline
+\end{tabular}
+\end{table}
+
+Notar que la media del tratamiento 5 es significativamente diferente a las demás, por lo que seleccionamos la plantación de cerezos con alisos en baja
+densidad.
 
 \section{Correlación espacial (problemas 5 y 6)}
 
-Ajustamos en R un modelo de correlación espacial usando el comando \verb gls  de la librería \verb nlme  para el año 7. Elegimos una estructura gaussiana.
-El modelo ajustado arrojó que la correlación entre dos árboles separados por una distancia de $d$ unidades (metros) es
+Ajustamos en R un modelo de correlación espacial usando el comando \verb gls  de la librería \verb nlme . Usamos una estructura gaussiana y una 
+exponencial. Al comparar los modelos con el comando \verb anova  obtuvimos:
+  
+\begin{table}[ht]
+\centering
+\begin{tabular}{rlrl}
+  \hline
+  Model & AIC & BIC & logLik \\ 
+  \hline
+  sin correlación & 2403.314 &  2514.337 &  -1181.657 \\ 
+  correlación gaussiana & 2360.601 &  2471.624 &  -1160.300 \\ 
+   \hline
+\end{tabular}
+\end{table}
 
-\begin{equation*}
- corr = (1-n) * e^{-(d/r)^2}
-\end{equation*}
+Concluimos que el modelo con correlación espacial exponencial es el que mejor ajusta los datos. Nos concentramos ahora en el modelo con y sin correlación
+espacial para los datos de los cerezos de siete años. Usamos correlación gaussiana y comparamos contra el modelo sin correlación:
 
-en donde $n = 0.1$ (nugget effect) y $r = 1.272792$. Por lo tanto existe correlación espacial entre los árboles.
-Podemos confirmar esto mediante el gráfico de burbujas de la figura 1,
-que indica que árboles cercanos tienen residuos similares.
-\begin{figure}
- \centering
-\includegraphics[width=7cm]{bubble}
-\caption{Gráfico de burbujas para ver la correlación espacial.}
-\end{figure}
+\begin{lstlisting}
+ l_nocorr = gls(Altura ~ Tratamiento + Bloque,
+               data = df_Anio7,
+               method = "ML",
+               na.action = na.omit)
+
+ l_corr = update(l_nocorr, 
+		 correlation = corGaus(form = ~Fila + Columna,
+				       nugget = FALSE))
+ 
+ anova(l_nocorr, l_corr)
+\end{lstlisting}
+
+El resultado de esta comparación arroja:
+
+\verbatiminput{output.txt}
+
+indicando que el modelo con correlación espacial gaussiana ajusta mejor (notar que el test de cociente de verosimilitud es significativo). 
+Para verificar qué plantación elegiríamos usamos el test LSD de Fisher nuevamente
+a los fines de estudiar las medias:
+
+\begin{lstlisting}
+anova(l_corr)  # Esto nos dice que los gl de los residuos es 264.
+mean_sq_errors_7 = mean(l_corr$residuals^2); mean_sq_errors_7
+lsd_corr_esp_7 = LSD.test(df_Anio7$Altura,
+                          df_Anio7$Tratamiento,
+                          DFerror = 264,
+                          MSerror = mean_sq_errors_7,
+                          console = TRUE)
+\end{lstlisting}
+
+El resultado es el mismo que antes:
+
+\verbatiminput{LSD_Fisher_A7.txt}
+
+con lo que concluimos que la plantación de cerezos con alisos en baja densidad es la más adecuada alcanzando un promedio de $3.895$ m.
+% \begin{figure}
+%  \centering
+% \includegraphics[width=7cm]{bubble}
+% \caption{Gráfico de burbujas para ver la correlación espacial.}
+% \end{figure}
 
 \end{document}
