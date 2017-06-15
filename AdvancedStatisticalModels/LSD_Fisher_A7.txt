@@ -1,0 +1,6 @@
+Groups, Treatments and means
+a 	 5 	 3.895833 
+b 	 4 	 3.52 
+b 	 1 	 3.400677 
+b 	 3 	 3.384783 
+b 	 2 	 3.381029 
