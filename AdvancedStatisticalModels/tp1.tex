@@ -188,7 +188,7 @@ densidad.
 
 Ajustamos en R un modelo de correlación espacial usando el comando \verb gls  de la librería \verb nlme . Usamos una estructura gaussiana y una 
 exponencial. Al comparar los modelos con el comando \verb anova  obtuvimos:
-  
+    
 \begin{table}[ht]
 \centering
 \begin{tabular}{rlrl}
@@ -197,6 +197,7 @@ exponencial. Al comparar los modelos con el comando \verb anova  obtuvimos:
   \hline
   sin correlación & 2403.314 &  2514.337 &  -1181.657 \\ 
   correlación gaussiana & 2360.601 &  2471.624 &  -1160.300 \\ 
+  correlación exponencial & 2334.517 &  2445.541 &  -1147.259 \\ 
    \hline
 \end{tabular}
 \end{table}
