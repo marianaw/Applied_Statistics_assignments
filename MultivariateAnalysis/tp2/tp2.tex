@@ -1,0 +1,160 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{listings}
+\usepackage{verbatim}
+
+%\documentclass[a4paper,10pt]{scrartcl}
+
+\title{Trabajo práctico Nº2}
+\author{Mariana Vargas V.}
+\date{\today}
+
+\pdfinfo{%
+  /Title    ()
+  /Author   ()
+  /Creator  ()
+  /Producer ()
+  /Subject  ()
+  /Keywords ()
+}
+
+\begin{document}
+\maketitle
+
+\section{Análisis de Componentes Principales}
+
+El Análisis de Componentes Principales es una técnica multivariada que consiste en una transformación ortogonal de una matrix de datos en otra cuyas
+variables resulten linealmente independientes. Estas, llamadas \textit{componentes principales}, son tales que representan las direcciones de mayor 
+variabilidad de los datos, permitiendo así la posibilidad de reducir la dimensión.
+
+\subsection{Nuestros datos}
+
+Llevamos adelante el análisis de componentes principales en la base de datos \verb indice.RData  que tiene información sobre las finanzas de un grupo
+de empresas.
+Con el comando \verb prcomp  de R obtuvimos las componentes principales. La salida de \verb summary(pc)  sugiere que las dos primeras son las más importantes
+dado que representan el $99\%$ de la varianza.
+
+\verbatiminput{summary_pc.txt}
+
+Podemos confirmar esto en la figura 1 en donde se muestran un gráfico de barra de las componentes contra la varianza.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=8cm]{biplot_pc}
+\caption{Componentes vs. la varianza.}
+\end{figure}
+
+En la figura 2 podemos ver a las variables representadas en función de las dos primeras componentes.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=10cm]{biplot_pc2}
+\caption{Biplot en las dos primeras componentes.}
+\end{figure}
+
+Observamos que algunas variables se aproximan a la primera componente, tales como la rentabilidad económica, el margen de explotación y el costo marginal
+de financiamiento, y otras que se aproximan a la segunda componente, como la inmovilización del activo. También hay variables que mantienen con las 
+componentes una relación negativa, como la inmovilización del patrimonio, el pasivo, y la solvencia.
+La matriz de correlaciones (tabla 1) confirma esto.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrrrrrrr}
+  \hline
+ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\ 
+  \hline
+LIQACID & -0.78 & -0.62 & 0.03 & 0.01 & -0.02 & -0.01 & -0.00 & -0.00 & -0.00 & 0.00 \\ 
+  SOLVENC & -0.33 & -0.94 & 0.10 & 0.03 & -0.00 & 0.00 & 0.00 & 0.00 & -0.00 & 0.00 \\ 
+  PROPACT & 0.94 & -0.33 & 0.03 & 0.03 & -0.00 & 0.01 & 0.00 & -0.00 & 0.00 & -0.00 \\ 
+  PNOCOR & -0.97 & 0.21 & -0.03 & -0.01 & -0.06 & 0.00 & 0.00 & 0.00 & 0.00 & -0.00 \\ 
+  AUTOFIN & 1.00 & 0.08 & 0.04 & -0.02 & -0.01 & -0.01 & -0.00 & 0.00 & 0.00 & -0.00 \\ 
+  INMACT & -0.34 & 0.93 & 0.08 & 0.09 & -0.00 & -0.00 & -0.00 & 0.00 & -0.00 & 0.00 \\ 
+  INMPN & -0.90 & 0.41 & 0.11 & -0.08 & 0.01 & 0.00 & -0.00 & -0.00 & 0.00 & -0.00 \\ 
+  RENTECO & 0.99 & 0.12 & 0.04 & -0.01 & -0.01 & -0.00 & 0.00 & -0.00 & -0.00 & -0.00 \\ 
+  MAREXP & 1.00 & 0.06 & 0.01 & -0.02 & -0.03 & 0.01 & -0.01 & 0.00 & 0.00 & 0.00 \\ 
+  REXP\_INT & 0.99 & 0.15 & 0.05 & -0.01 & -0.01 & 0.00 & 0.01 & -0.00 & -0.00 & 0.00 \\ 
+   \hline
+\end{tabular}
+\caption{Matriz de correlaciones entre componentes y variables usando la matriz S.}
+\end{table}
+
+Repetimos el análisis usando la matriz de correlación de los datos.
+La salida muestra que esta vez las cuatro primeras componentes suman el $95 \%$ de la correlación entre las variables, lo cual podemos ver en la 
+figura 3.
+
+\verbatiminput{summary_pc_corr.txt}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=8cm]{screeplot_corr}
+\caption{Gráfico de las componentes vs. la varianza, usando la matriz de correlación.}
+\end{figure}
+
+La figura 4 muestra las variables originales en función de las componentes elegidas, que a diferencia del análisis anterior, maximizan la correlación entre
+variables y no su varianza.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=14cm]{biplot_pca_corr}
+\caption{Gráfico de las variables en función de las componentes principales.}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrrrrrrr}
+  \hline
+ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\ 
+  \hline
+LIQACID & -0.75 & -0.65 & 0.04 & 0.01 & 0.00 & 0.12 & 0.05 & 0.04 & 0.02 & 0.00 \\ 
+  SOLVENC & -0.81 & -0.57 & -0.06 & 0.04 & -0.04 & 0.06 & 0.04 & 0.03 & -0.02 & 0.00 \\ 
+  PROPACT & -0.91 & -0.28 & -0.05 & 0.29 & -0.01 & -0.07 & -0.04 & -0.01 & 0.00 & -0.00 \\ 
+  PNOCOR & 0.88 & 0.07 & 0.34 & 0.23 & 0.04 & 0.20 & -0.05 & 0.03 & -0.00 & -0.00 \\ 
+  AUTOFIN & -0.74 & 0.45 & -0.18 & -0.19 & 0.42 & 0.05 & -0.03 & 0.04 & -0.00 & -0.00 \\ 
+  INMACT & 0.86 & 0.03 & -0.11 & 0.44 & 0.21 & -0.09 & 0.07 & 0.03 & 0.00 & 0.00 \\ 
+  INMPN & 0.94 & 0.08 & -0.06 & -0.30 & -0.04 & 0.04 & 0.08 & 0.01 & -0.00 & -0.00 \\ 
+  RENTECO & -0.72 & 0.65 & 0.05 & 0.17 & 0.02 & 0.11 & 0.07 & -0.08 & -0.00 & -0.00 \\ 
+  MAREXP & -0.67 & 0.40 & 0.61 & -0.06 & -0.00 & -0.11 & 0.03 & 0.04 & -0.00 & -0.00 \\ 
+  REXP\_INT & -0.37 & 0.83 & -0.29 & 0.12 & -0.28 & 0.04 & -0.00 & 0.07 & 0.00 & 0.00 \\ 
+   \hline
+\end{tabular}
+\caption{Matriz de correlación de las variables en función de las componentes.}
+\end{table}
+
+De la matriz de correlación entre componentes y variables muestra una relación positiva entre la inmovilización del activo y del patrimonio, y del pasivo
+respecto de la primera componente, mientras que la propiedad del activo mantiene una relación negativa.
+
+\section{Análisis de correspondencia}
+
+Mediante el análisis de correspondencia estudiamos tablas de contingencia de variables clasificatorias. Esta técnica es análoga al análisis de componentes
+principales.
+
+\subsection{Resultados en los datos}
+
+Trabajamos con una base de datos que tiene información sobre una encuensta sobre hogares. Analizamos las variables correspondientes al estado civil y al
+nivel de educación.
+Con el comando \verb ca  obtenemos el análisis de correspondencia. La raíz cuadrada de la suma de los autovalores nos da un índice de correlación
+entre filas y columnas. En este
+caso es de $0.4$, lo que indica una baja correlación. Esto es, el nivel de educación no necesariamente define el estado civil, y viceversa.
+En la figura 5 podemos visualizar los resultados. Recordemos que puntos correspondientes a las filas 
+que estén más cerca indican perfiles columna más parecidos. Por ejemplo, observar que las personas unidas y casadas tienden a tener el mismo nivel de 
+educación, contrario a lo que ocurre con personas viudas y solteras, que se ven alejadas en el gráfico.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=10cm]{corr_simple}
+\caption{Gráfico de correspondencia simple entre estado civil y educación.}
+\end{figure}
+
+La función \verb mjca  nos permite hacer un análisis de correspondencia múltiple. En este caso la inercia indica una correlación del $84\%$ entre las
+variables fila y las variables columna.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=12cm]{corr_mult}
+\caption{Gráfico de correspondencia simple entre estado civil y educación.}
+\end{figure}
+
+\end{document}
