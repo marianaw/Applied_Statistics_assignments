@@ -5,8 +5,10 @@
 \usepackage{subfig}
 \usepackage{listings}
 \usepackage{verbatim}
+\usepackage{amsthm}
 
 %\documentclass[a4paper,10pt]{scrartcl}
+\newtheorem{myprop}{Propiedad}
 
 \title{Trabajo práctico Nº2}
 \author{Mariana Vargas V.}
@@ -139,7 +141,7 @@ Con el comando \verb ca  obtenemos el análisis de correspondencia. La raíz cua
 entre filas y columnas. En este
 caso es de $0.4$, lo que indica una baja correlación. Esto es, el nivel de educación no necesariamente define el estado civil, y viceversa.
 En la figura 5 podemos visualizar los resultados. Recordemos que puntos correspondientes a las filas 
-que estén más cerca indican perfiles columna más parecidos. Por ejemplo, observar que las personas unidas y casadas tienden a tener el mismo nivel de 
+que estén más cerca indican perfiles columna asociados más parecidos. Por ejemplo, observar que las personas unidas y casadas tienden a tener el mismo nivel de 
 educación, contrario a lo que ocurre con personas viudas y solteras, que se ven alejadas en el gráfico.
 
 \begin{figure}[h]
@@ -154,7 +156,218 @@ variables fila y las variables columna.
 \begin{figure}[h]
 \centering
 \includegraphics[width=12cm]{corr_mult}
-\caption{Gráfico de correspondencia simple entre estado civil y educación.}
+\caption{Gráfico de correspondencia múltiple.}
 \end{figure}
+
+\subsection{Equivalencia distribucional de la distancia $\chi^2$}
+
+\begin{myprop}
+ Dada una tabla de contingencia, si dos filas $i, i'$ son tales que sus estructuras relativas son iguales, es decir, 
+ \begin{equation*}
+  \frac{f_{i,j}}{f_{i,.}} = \frac{f_{i', j}}{f_{i',.}}
+ \end{equation*}
+ para $j = 1, ..., J$, y son combinadas en una única fila $p$, entonces,
+ \begin{equation*}
+  d_{\chi^2}(p, p') = d_{\chi^2}(i, p') = d_{\chi^2}(i', p')
+ \end{equation*}
+ para cualquier otra fila $p'$.
+ \end{myprop}
+
+\begin{proof}
+ Tomemos dos filas arbitrarias $i$ y $i'$ tales que cumplen la hipótesis, esto es, 
+ \begin{equation*}
+  \frac{f_{i,j}}{f_{i,.}} = \frac{f_{i', j}}{f_{i',.}} = k_j
+ \end{equation*}
+ con $j = 1, ..., J$. Notar que la unión de dos filas consiste en la suma de ambas, lo que resulta en la suma de los totales y de cada conteo. Por lo 
+ tanto la fila que resulta de la unión de $i$ e $i'$, $p$, es tal que
+ \begin{equation*}
+  \frac{f_{p,j}}{f_{p,.}} = \frac{f_{i, j} + f_{i', j}}{f_{i,.} + f_{i',.}}
+ \end{equation*}
+ Para demostrar la propiedad basta con probar que $\frac{f_{p,j}}{f_{p,.}} = k_j$ para todo $j = 1, ..., J$, lo que se deduce de la ecuación:
+ \begin{align*}
+  \frac{f_{p,j}}{f_{p,.}} &= \frac{f_{i, j} + f_{i', j}}{f_{i,.} + f_{i',.}}\\  
+ \end{align*}
+ Luego las distancias a otras filas se mantienen invariables.
+\end{proof}
+
+
+\section{Análisis factorial}
+
+El análisis factorial tiene como fin explicar y representar a los datos observados en términos de variables latentes o no observadas. Esto es, busca
+inferir un modelo
+
+\begin{equation*}
+ X = \mu + \Lambda f + u
+\end{equation*}
+
+en donde $f$ es un vector de factores, $\mu$ el vector de medias, $\Lambda$ una matriz de coeficientes que ponderan el peso de cada factor para cada 
+variable observada, y $u$ un vector de error.
+Intuitivamente podemos pensar que mediante el análisis factorial estamos modelando la correlación entre las variables observadas, si bien los factores 
+pueden o no ser independientes.
+
+\subsection{Análisis factorial en nuestros datos}
+
+Nuestra base de datos contiene índices de índole social tales como niveles de educación, empleo, y necesidades, sobre personas distribuidas en diferentes
+departamentos de la provincia de Córdoba. 
+Para estudiar a qué se deben estos comportamientos y encontrar variables latentes que los expliquen
+usaremos el comando de R \verb factanal . Asumiremos varios escenarios.
+
+\begin{enumerate}
+ \item \textbf{Dos factores sin rotación.} En esta configuración el test de hipótesis arroja un p-valor de casi 0 que indica que dos factores
+ son suficientes. En la tabla 3 podemos observar la matriz de cargas. Notar que el primer factor ``agrupa'' variables que caen bajo la categoría de 
+ necesidades y las contrapone a otras que claramente representan un tipo de ocupación: estudiante, jubilado, etc. Por otra parte el segundo factor, que toma
+ valores menos extremos, parece contrastar combinaciones de estas categorías, y, por ejemplo, personas con alguna ocupación y aquellas que no la tienen.
+ Podemos ver las proyecciones de los datos en función de los dos factores en la figura 7.
+ 
+  \begin{table}[ht]
+    \centering
+    \begin{tabular}{rrr}
+      \hline
+    & Factor1 & Factor2 \\ 
+      \hline
+      X.ocupados & -0.46 & -0.42 \\ 
+      X.desoc & 0.13 & 0.54 \\ 
+      X.jubil & -0.36 & -0.14 \\ 
+      X.estud & -0.28 & 0.55 \\ 
+      X.NBIhog & 0.90 & -0.06 \\ 
+      X.privcte & -0.05 & 0.68 \\ 
+      X.privpat & 0.58 & -0.45 \\ 
+      X.privconv & 0.93 & 0.01 \\ 
+      edad & -0.67 & -0.38 \\ 
+      educ & -0.84 & 0.17 \\ 
+      hijos & 0.89 & 0.12 \\ 
+      X.propietarios & -0.05 & -0.07 \\ 
+      \hline
+    \end{tabular}
+    \caption{Matriz de carga para la configuración 1 de la sección 3.1}
+  \end{table}
+  
+  \begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{fact_2}
+  \caption{Observaciones en función de los dos factores para la configuración 1 de 3.1.}
+  \end{figure}
+ 
+ \item \textbf{Dos factores con rotación.} Para facilitar la interpretación de los factores aplicamos una transformación ortogonal sobre la matriz de 
+ carga, es decir, una rotación, que maximice la varianza de los coeficientes que ponderan cada factor en las variables. Obtenemos la matriz que se 
+ muestra en la tabla 4. Observar que los valores son apenas más extremos, y que confirman las conclusiones a las que arribamos en el incsiso anterior.
+ En esta configuración tanto como en la anterior podríamos hablar de factores que tienen que ver con el nivel de ocupación y el nivel de necesidades
+ insatisfechas y/o privaciones.
+ En la figura 8 podemos ver el gráfico de las observaciones en función de los factores. Observar que es casi idéntico al gráfico del inciso anterior, 
+ excepto por una leve rotación.
+ 
+  \begin{table}[ht]
+  \centering
+  \begin{tabular}{rrr}
+    \hline
+  & Factor1 & Factor2 \\ 
+    \hline
+  X.ocupados & -0.47 & -0.41 \\ 
+    X.desoc & 0.15 & 0.54 \\ 
+    X.jubil & -0.36 & -0.13 \\ 
+    X.estud & -0.26 & 0.56 \\ 
+    X.NBIhog & 0.90 & -0.08 \\ 
+    X.privcte & -0.03 & 0.68 \\ 
+    X.privpat & 0.57 & -0.46 \\ 
+    X.privconv & 0.93 & -0.01 \\ 
+    edad & -0.68 & -0.36 \\ 
+    educ & -0.83 & 0.20 \\ 
+    hijos & 0.89 & 0.10 \\ 
+    X.propietarios & -0.05 & -0.07 \\ 
+    \hline
+  \end{tabular}
+  \caption{Matriz de carga de la configuración 2 de 3.1}
+  \end{table}
+  
+  \begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{fact_2_vmx}
+  \caption{Observaciones en función de los dos factores para la configuración 2 de 3.1.}
+  \end{figure}
+ 
+ \item \textbf{Tres factores (con rotación variamax).} Si observamos la tabla 5 veremos que nuevamente el primer factor tiende a agrupar y contraponer
+ niveles de ocupación y educación, con niveles de necesidades insatisfechas. Este es un común denominador en nuestros análisis. El segundo factor vuelve
+ a darnos una noción de personas ocupadas vs. personas no ocupadas, y el tercero pareciera contrastar variables que tienen que ver con la población pasiva,
+ (jubilados, la edad) con las demás, especialmente el porcentaje de personas con una ocupación. 
+ En la figura 9 se observan las proyecciones de las observaciones en función de los dos primeros factores.
+ 
+  \begin{table}[ht]
+  \centering
+  \begin{tabular}{rrrr}
+    \hline
+  & Factor1 & Factor2 & Factor3 \\ 
+    \hline
+  X.ocupados & -0.56 & -0.74 & -0.36 \\ 
+    X.desoc & 0.06 & 0.55 & -0.15 \\ 
+    X.jubil & -0.15 & 0.06 & 0.78 \\ 
+    X.estud & -0.33 & 0.47 & -0.03 \\ 
+    X.NBIhog & 0.89 & 0.03 & -0.13 \\ 
+    X.privcte & -0.14 & 0.76 & -0.08 \\ 
+    X.privpat & 0.63 & -0.29 & 0.04 \\ 
+    X.privconv & 0.91 & 0.09 & -0.27 \\ 
+    edad & -0.45 & -0.32 & 0.83 \\ 
+    educ & -0.80 & 0.14 & 0.25 \\ 
+    hijos & 0.83 & 0.16 & -0.27 \\ 
+    X.propietarios & -0.03 & -0.14 & 0.16 \\ 
+    \hline
+  \end{tabular}
+  \caption{Matriz de carga para tres factores con rotación varimax.}
+  \end{table}
+ 
+  \begin{figure}[h]
+  \centering
+  \includegraphics[width=10cm]{fact_3_vmx}
+  \caption{Observaciones en función de los dos primeros factores para la configuración 3 de 3.1.}
+  \end{figure}
+ 
+\end{enumerate}
+
+
+\subsection{Determinación del número máximo de factores}
+
+Recordar que asumimos que la matriz de varianzas $V$ tiene la propiedad siguiente:
+
+\begin{equation}
+ V = \Lambda\Lambda' + \psi
+\end{equation}
+
+en donde $\Lambda$ es la matriz de carga y, por lo tanto, $\Lambda\Lambda'$ la matriz de varianzas asociada a los factores, y $\psi$ una matriz diagonal
+que representa la variabilidad específica de cada variable.
+Esto quiere decir que $V$ puede descomponerse como la suma de dos matrices de varianza, cada una de las cuales representa una componente de variabilidad
+en el modelo.
+Ahora bien, dado que no conocemos $V$, la reemplazamos por $S$ en la ecuación (1). Nos queda:
+
+\begin{equation}
+ S = \Lambda\Lambda' + \psi
+\end{equation}
+
+$S$ es una matriz diagonal $p\times p$ y por lo tanto tiene $p(p+1)/2$ elementos distintos, que definen el mismo número de ecuaciones. En el lado derecho
+de la ecuación (2) nos queda determinado un número de incógnitas que depende de la cantidad de factores. Sea $m$ tal cantidad. La matriz $\Lambda$ es 
+$p\times m$ y por lo tanto tiene $pm$ elementos distintos, i.e., incógnitas. Por otro lado, $\psi$ es una matriz diagonal $p\times p$, por lo que suma
+$p$ incógnitas más. Esto resulta en $pm + p$ incógnitas. Sin embargo, a los fines de identificar $\Lambda$ de manera única debemos imponer restricciones
+sobre ella, por ejemplo, requerir 
+
+\begin{equation*}
+ \Lambda' \psi^{-1} \Lambda = D
+\end{equation*}
+
+en donde $D$ es diagonal $m\times m$.
+Esta condición restringe el modelo en $m(m-1)/2$ elementos, que es la cantidad de términos que hay debajo (y por encima) de la diagonal de una matriz 
+cuadrada $m \times m$ (al ser diagonal la matriz es simétrica). En otras palabras, tenemos $m(m-1)/2$ incógnitas menos. 
+Por lo tanto la cantidad de incógnitas en el lado izquierdo
+de la ecuación (2) es $pm + p - m(m-1)/2$. Para que el sistema esté determinado debe haber un mayor número de ecuaciones que de incógnitas.
+Nos queda:
+
+\begin{equation}
+ \frac{p(p+1)}{2} \geq pm + p - \frac{m(m-1)}{2}
+\end{equation}
+
+Reagrupando obtenemos:
+
+\begin{equation}
+ (p - m)^2 \geq p + m
+\end{equation}
+
+Luego, $m$ deberá ser tal que la ecuación (4) se cumple.
 
 \end{document}

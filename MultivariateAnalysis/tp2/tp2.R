@@ -1,4 +1,4 @@
-# setwd('Documents/Maestria/AnalisisMultivariado/Unidad2/')
+ setwd('Documents/Maestria/AnalisisMultivariado/Unidad2/')
 # load('Documents/Maestria/AnalisisMultivariado/Unidad2/indice.rda')
 
 # Definimos la condición como un factor:
@@ -81,3 +81,33 @@ biplot(mod3$rowpcoord,mod3$colpcoord,var.axes = TRUE,xlab="dim 1", ylab="dim 2")
 # ------------------------------------------------------------
 # -------------- ANÁLISIS FACTORIAL --------------------------
 # ------------------------------------------------------------
+setwd('/home/mariana/Documents/Maestria/Applied_Statistics_assignments/MultivariateAnalysis/tp2/')
+library(gdata)
+Datos = read.xls('base_factorial.xlsx')
+library(psych)
+
+fa <- factanal(Datos[,5:16],factors=2, rotation="none", scores="Bartlett", data=Datos)
+fa$converged
+fa$loadings
+unclass(fa$loadings)
+
+fa_2_vmx <- factanal(Datos[,5:16],factors=2, rotation="varimax", scores="Bartlett", data=Datos)
+fa_2_vmx$converged
+fa_2_vmx$loadings
+unclass(fa_2_vmx$loadings)
+
+
+fa_7_var <- factanal(Datos[,5:16],factors=7, rotation="varimax", scores="Bartlett", data=Datos)
+fa_7_var$converged
+fa_7_var$loadings
+fa_7_var
+
+fa_5_var <- factanal(Datos[,5:16],factors=3, rotation="varimax", scores="Bartlett", data=Datos)
+fa_5_var$converged
+fa_5_var$loadings
+fa_5_var
+
+fa_2_var <- factanal(Datos[,5:16],factors=2, rotation="varimax", scores="Bartlett", data=Datos)
+fa_2_var$converged
+fa_2_var$loadings
+fa_2_var
