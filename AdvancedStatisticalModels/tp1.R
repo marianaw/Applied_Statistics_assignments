@@ -81,7 +81,6 @@ compar = anova(me_nocor, me_gauss, me)
 # El de correlación espacial es el mejor.
 
 # Estudiamos las diferencias de medias en ese modelo:
-
 # Calculamos la suma de cuadrados de los residuos:
 mean_sq_errors = mean(me$residuals^2); mean_sq_errors
 
@@ -96,14 +95,28 @@ gl_residuos = nrow(df) - sum(a_me$numDF) - 1; gl_residuos
 lsd_corr_esp = LSD.test(df$Altura, df$Tratamiento, gl_residuos, mean_sq_errors, console = TRUE)
 # Vemos que la plantación de cerezo con alisos en baja densidad sigue siendo la mejor.
 
+# Lo anterior fue un modelo longitudinal con correlación espacial.
 # Miramos el modelo que corresponde al séptimo año:
-l_nocorr = gls(Altura ~ Tratamiento + Anio + I(Anio^2) + Anio * Tratamiento + I(Anio^2) * Tratamiento + Bloque - 1,
+l_nocorr = gls(Altura ~ Tratamiento + Bloque,
                data = df_Anio7,
                # cor = corAR1(form = ~ 1|BloqueTratam),
                method = "ML",
                na.action = na.omit)
-l_corr = update(l, correlation = corGaus(form = ~Fila + Columna|Anio, nugget = FALSE))
 
+l_corr = update(l_nocorr, correlation = corGaus(form = ~Fila + Columna, nugget = FALSE))
+
+# Comparamos los modelos:
+anova(l_nocorr, l_corr)
+
+# Corremos Fisher otra vez:
+
+anova(l_corr)
+mean_sq_errors_7 = mean(l_corr$residuals^2); mean_sq_errors_7
+lsd_corr_esp_7 = LSD.test(df_Anio7$Altura,
+                          df_Anio7$Tratamiento,
+                          DFerror = 264,
+                          MSerror = mean_sq_errors_7,
+                          console = TRUE)
 # --------------------------------------------------------------------------
 
 
