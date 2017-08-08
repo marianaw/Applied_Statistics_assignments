@@ -1,0 +1,214 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{listings}
+\usepackage{verbatim}
+
+%opening
+\title{Trabajo práctico Nº2}
+\author{Mariana Vargas Vieyra}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+En este trabajo abordamos dos problemas distintos. En primer lugar estudiamos el efecto de dos 
+tratamientos en una muestra de niveles de glucemia. Para ello usamos un modelo mixto generalizado. En segundo lugar, exploramos y modelamos
+la producción de leche de un grupo de vacas distribuidas en diferentes tambos. Para este último usamos un modelo no lineal mixto.
+\end{abstract}
+
+\section{Problema 1}
+
+Nuestro objetivo para este primer problema es evaluar el efecto de dos programas de alimentación distintos, llámense A y B, en los niveles de glucemia
+hallados en medidas repetidas en adultos mayores.
+
+\subsection{Análisis exploratorio}
+El comando \verb summary  de \verb R  expone la estructura de los datos y las variables:
+
+\verbatiminput{summary_data.txt}
+
+Añadimos una variable \verb prop  que guarda las proporciones de los conteos por conveniencia. Esto nos permitirá mayor rapidez al graficar y agrega 
+información importante a los datos.
+En la figura 1 podemos ver el comportamiento de dichas proporciones de las tomas para cada una de las personas, distinguidas por tratamiento. Notar que 
+no hay un comportamiento cuadrático marcado con respecto a la variable \verb toma .
+
+\begin{figure}
+ \centering
+ \includegraphics[width=10cm]{props}
+\caption{Gráfico del comportamiento de las proporciones en función de las tomas para cada persona.}
+\end{figure}
+
+Un gráfico de mosaico (figura 2) nos muestra que los datos están balanceados.
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=6cm]{mosaic_toma_persona}
+\caption{Gráfico de cruzamientos entre persona y toma.}
+\end{figure}
+
+\subsection{Modelos}
+
+Hay una decisión de diseño respecto de qué
+variables serán tomadas como efecto fijo o aleatorio. Dado que hay sólo dos programas de alimentación siendo evaluados la variable 
+\verb Programa.Alimentación  será un efecto fijo. Estamos interesadas en el efecto de estos sobre la población de adultos mayores, por lo tanto es razonable asumir nuestra variable
+\verb persona  como un efecto aleatorio cuyas observaciones representan una muestra de una población con distribución normal. Algunas observaciones
+al respecto:
+\begin{enumerate}
+ \item Ignorar el efecto \verb Persona  implicaría una partición del error poco apropiada: parte del error podría ser considerado como aleatorio, los
+ niveles de significatividad no serían confiables.
+ \item Asumir \verb Persona  como efecto fijo sería erróneo: estaríamos modelando cada una de estas personas y no podríamos extrapolar las conclusiones
+ a la población de adultos mayores, que es el objetivo de nuestro estudio.
+\end{enumerate}
+
+Ajustamos los siguientes modelos:
+
+\begin{itemize}
+ \item El primer modelo evaluado es tal que
+ \begin{equation}
+  y_{i, j, k} = \beta_{0,i} + \beta_{1,i} \tau_i + \gamma_j + \varepsilon_{i, j, k}
+ \end{equation}
+en donde $i = A, B$, $j = 1, ..., 10$, y $k = 1, ..., 5$,
+$y_{i,j,k}$ es la respuesta de la $j$-ésima persona bajo el $k$-ésimo tratamiento, $\tau_i$ es el efecto del $i$-ésimo tratamiento, que
+se asume efecto fijo, $\gamma_j$ es
+el efecto aleatorio de la $j$-ésima persona y es tal que $\gamma_j \sim N(0, \sigma_p^2)$, y $\varepsilon_{i,j,k} \sim N(0, \sigma^2)$ el error aleatorio. 
+
+ \item A continuación agregamos \verb toma  como efecto fijo:
+ \begin{equation}
+  y_{i, j, k} = \beta_{0,i} + \beta_{1,i} \tau_i + \beta_{2, k} t_k + \gamma_j + \varepsilon_{i, j, k}
+ \end{equation}
+ en donde ahora $t_k$ representa el efecto de la toma $k$-ésima.
+\end{itemize}
+
+Para comparar los modelos realizamos un análisis de la varianza con el comando \verb anova , que arroja como resultado que el segundo modelo, el menos
+parcimonioso, ajusta mejor los datos. 
+
+\verbatiminput{anova_pr1.txt}
+
+Analizando los resultados del modelo seleccionado observamos que el tratamiento es significativo, así también como las tomas 1 (incluida en el 
+intercepto), 4, y 5. La varianza estimada para \verb persona  es $\hat{\sigma_p}^2 = 0.22$.
+
+Recordar que dado que la respuesta consiste en conteos usamos un modelo mixto generalizado con una función link logit, es decir,
+
+\begin{align*}
+ X\beta &= \eta(\mu) \\
+ &= ln(\frac{\mu}{1 - \mu})
+\end{align*}
+
+en donde $\mu = \beta_0 + \beta_1 \tau + \beta_2 T$ para el modelo de la ecuación (2) en forma matricial.
+Por lo tanto debemos tomar la inversa de esta función en los resultados arrojados por \verb R  para obtener las estimaciones.
+
+\section{Problema 2}
+
+En esta sección estudiamos la producción de leche de una muestra de vacas distribuidas en varios tambos. La figura 3 nos muestra la tendencia de la cantidad
+de litros de leche producidos en función de los días de lactancia para algunas vacas de entre la muestra con la que contamos. Podemos ver que, si bien 
+no es muy marcada, hay un comportamiento exponencial negativo en los datos.
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=10cm]{vacas}
+\caption{Tendencia de litros de leche producidos en función de los días de lactancia.}
+\end{figure}
+
+Un modelo apropiado para evaluar niveles de lactancia es el de Wood, definido de la siguiente manera:
+
+\begin{equation*}
+ y = ax^b e^{-cx} + \varepsilon
+\end{equation*}
+
+Si ajustamos un modelo de efectos fijos
+las estimaciones que arroja \verb R  son $\hat{a} = 19.55$, $\hat{b} = 0.13$, y $\hat{c} = 0.002$. El problema con 
+ajustar una curva para todos los sujetos es que las tendencias individuales (que podemos ver en la figura 3) no son debidamente modeladas y se incorporan
+al modelo en forma de error aleatorio. El gráfico separado por vaca para residuos vs. predichos de la figura 4 muestra un patrón en su distribución
+\footnote{Recordemos que estamos graficando una submuestra de vacas.}. 
+
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=10cm]{error_vacas_fixed}
+\caption{Residuos vs. predichos por vaca.}
+\end{figure}
+
+Algo análogo ocurre con los tambos (figura 5).
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=10cm]{error_tambo_fixed}
+\caption{Residuos vs. predichos por tambo.}
+\end{figure}
+
+Podemos ver en la figura 6 cómo ajusta la curva de este primer modelo a las primeras mil observaciones de nuestros datos.
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=10cm]{fitted_fixed}
+\caption{Curva del modelo de efectos fijos.}
+\end{figure}
+
+\subsection{Comparación con modelos mixtos}
+
+Para resolver los problemas que acarrea el modelo anterior exploraremos algunas alternativas:
+
+\begin{itemize}
+ \item Un modelo que agrupe por tambo, es decir, introduciremos un efecto aleatorio para el tambo. Más específicamente, asumiremos una alteración 
+ introducida por el factor \verb TAMBO  en el coeficiente multiplicativo $a$:
+ \begin{equation}
+  y_{i,j} = (a + \beta_i)x^b e^{-cx} + \varepsilon_{i,j}
+ \end{equation}
+  en donde $y_{i,j}$ es la cantidad de litros de leche producido por la vaca $j$ en el tambo $i$ en función de los días de lactancia transcurridos, $x$.
+  Comparamos este modelo con el de efectos fijos mediante un anova, y concluimos que es necesario modelar el efecto del tambo:
+  \verbatiminput{anova_pr2.txt}
+ \item Un modelo que agrupe por tambo y a su vez por vaca. Esto es:
+ \begin{equation}
+  y_{i,j} = (a + \beta_i + \gamma_j)x^b e^{-cx} + \varepsilon{i,j}
+ \end{equation}
+ Un anova para comparar entre los últimos dos modelos nos permite concluir que este último modelo es el que mejor ajusta los datos. 
+ \verbatiminput{anova_pr2_2.txt}
+ Notar además que el patrón en los residuos vs. predichos ha mejorado, como se puede ver en la figura 7.
+\end{itemize}
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=10cm]{fitted_resid_mod3}
+\caption{Residuos vs. predichos para el modelo (4).}
+\end{figure}
+
+\subsection{Predicción para 305 días de lactancia}
+
+Comenzamos por ajustar un modelo con un intercepto aleatorio para cada vaca, esto es:
+\begin{equation}
+  y_{i,j} = (a + \gamma_j)x^b e^{-cx} + \varepsilon_{i,j}
+\end{equation}
+en donde $\gamma_j$ es el efecto aleatorio de la $j$-ésima vaca. En \verb R , 
+\verbatiminput{frand_cow.txt}
+
+Usamos la ecuación 5 para calcular la cantidad de litros de leche esperada para cada día, para cada vaca. Las estimaciones de los parámetros arrojadas
+son $a = 14.52$, $b = 0.219$, y $c = 0.003$. El vector $\gamma = (\gamma_1, ... \gamma_v)$, $v = $ número de vacas, puede encontrarse con el comando
+
+\begin{lstlisting}
+ re <- random.effects(frand_cow)$a
+\end{lstlisting}
+
+Para obtener los totales por vaca agregamos la matriz de litros por día por vaca, \verb predicted , sumando sobre el eje de los días:
+
+\begin{lstlisting}
+ accumulated = apply(predicted, 1, sum)
+\end{lstlisting}
+
+lo que nos da como resultado la estimación de cantidad de litros total después de 305 días de lactancia para cada vaca.
+
+\subsection{Correlación entre variables observadas y predichas}
+
+Luego de calcular los valores predichos que corresponden a cada uno de los percentiles solicitados, calculamos la correlación entre estos y las variables
+observadas. Obtuvimos los siguientes resultados:
+
+\begin{itemize}
+ \item \textbf{Percentil 2.5,} correlación de 0.42,
+ \item \textbf{Percentil 50,} correlación de 0.73,
+ \item \textbf{Percentil 97.5,} correlación de 0.86.
+\end{itemize}
+
+
+\end{document}
