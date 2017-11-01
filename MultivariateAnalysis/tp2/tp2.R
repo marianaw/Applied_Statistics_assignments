@@ -90,11 +90,13 @@ fa <- factanal(Datos[,5:16],factors=2, rotation="none", scores="Bartlett", data=
 fa$converged
 fa$loadings
 unclass(fa$loadings)
+biplot(fa$scores,unclass(fa$loadings))
 
 fa_2_vmx <- factanal(Datos[,5:16],factors=2, rotation="varimax", scores="Bartlett", data=Datos)
 fa_2_vmx$converged
 fa_2_vmx$loadings
 unclass(fa_2_vmx$loadings)
+biplot(fa_2_vmx$scores,unclass(fa_2_vmx$loadings))
 
 
 fa_7_var <- factanal(Datos[,5:16],factors=7, rotation="varimax", scores="Bartlett", data=Datos)
@@ -106,6 +108,7 @@ fa_5_var <- factanal(Datos[,5:16],factors=3, rotation="varimax", scores="Bartlet
 fa_5_var$converged
 fa_5_var$loadings
 fa_5_var
+biplot(fa_5_var$scores,unclass(fa_5_var$loadings))
 
 fa_2_var <- factanal(Datos[,5:16],factors=2, rotation="varimax", scores="Bartlett", data=Datos)
 fa_2_var$converged

@@ -30,8 +30,7 @@ El comando \verb summary  de \verb R  expone la estructura de los datos y las va
 
 \verbatiminput{summary_data.txt}
 
-Añadimos una variable \verb prop  que guarda las proporciones de los conteos por conveniencia. Esto nos permitirá mayor rapidez al graficar y agrega 
-información importante a los datos.
+Añadimos una variable \verb prop  que guarda las proporciones de los conteos por conveniencia y para graficar tendencias con mayor facilidad.
 En la figura 1 podemos ver el comportamiento de dichas proporciones de las tomas para cada una de las personas, distinguidas por tratamiento. Notar que 
 no hay un comportamiento cuadrático marcado con respecto a la variable \verb toma .
 
@@ -99,6 +98,19 @@ Recordar que dado que la respuesta consiste en conteos usamos un modelo mixto ge
 
 en donde $\mu = \beta_0 + \beta_1 \tau + \beta_2 T$ para el modelo de la ecuación (2) en forma matricial.
 Por lo tanto debemos tomar la inversa de esta función en los resultados arrojados por \verb R  para obtener las estimaciones.
+
+Al obtener p-valores significativos para los coeficientes de los programas de alimentación, la intuición nos dice que hay una diferencia significativa
+entre ambos tratamientos. Confirmamos esto mediante un test de Tukey para diferencia de medias. La hipótesis nula será que $\mu_A - \mu_B = 0$, en donde
+$\mu_A$ y $\mu_B$ son las medias poblacionales de los tratamientos A y B respectivamente.
+
+\verbatiminput{mean_test.txt}
+
+\subsection{Conclusión sobre los programas de alimentación}
+
+La salida del modelo seleccionado indica que el programa de alimentación B es sistemáticamente mejor que el A porque tiene un desvío negativo respecto
+de este último, esto es, los niveles de glucemia superaron el umbral de lo tolerable una menor cantidad de veces cuando se estaba bajo el tratamiento B.
+
+\verbatiminput{salida_gm2.txt}
 
 \section{Problema 2}
 

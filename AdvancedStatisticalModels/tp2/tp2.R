@@ -1,6 +1,7 @@
 library(lme4)
 library(lattice)
 library(agricolae)
+library(multcomp)
 
 setwd("Documents/Maestria/Applied_Statistics_assignments/AdvancedStatisticalModels/tp2/")
 data = read.csv('GLUCEMIA.csv')
@@ -50,7 +51,9 @@ gm5 <- glmer(cbind(GlucemiaAlta, Total - GlucemiaAlta) ~ Programa.Alimentacion +
 
 
 # Prueba de diferencia de medias
-lsd = LSD.test(data$prop, data$Programa.Alimentacion, 93, 681); lsd
+# lsd = LSD.test(data$prop, data$Programa.Alimentacion, 93, 45.98); lsd  # Esto no tiene sentido.
+res = glht(gm1, linfct = mcp(Programa.Alimentacion='Tukey'))
+summary(res)
 
 # Modelo con un intercepto aleatorio para cada persona (anidar Toma)
 
