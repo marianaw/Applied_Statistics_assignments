@@ -1,0 +1,192 @@
+\documentclass[a4paper,10pt]{article}
+%\documentclass[a4paper,10pt]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{verbatim}
+\usepackage{listings}
+\usepackage{mathrsfs}
+\usepackage{subcaption}
+\usepackage[pdftex]{graphicx}  
+
+
+\title{Series de Tiempo. Actividad nº2}
+\author{Mariana Vargas V.}
+\date{\today}
+
+\pdfinfo{%
+  /Title    ()
+  /Author   ()
+  /Creator  ()
+  /Producer ()
+  /Subject  ()
+  /Keywords ()
+}
+
+\begin{document}
+\maketitle
+
+\section{Primer problema}
+
+El proceso AR(1) está dado por la siguiente ecuación
+
+\begin{equation}
+ X_t = 2 + 0.9 X_{t-1} + \varepsilon_t
+\end{equation}
+
+Es decir que $C = 2$ y $\phi = 0.9$. Por lo tanto la media es
+
+\begin{align*}
+ \mu &= \frac{C}{1 - \phi}\\
+ &= \frac{2}{1 - 0.9}\\
+ &= 20
+\end{align*}
+
+La función de varianza será
+
+\begin{align*}
+ Var(X_t) &= Var(2 + 0.9X_{t-1} + \varepsilon_t)\\
+ &= 0.9^2 Var(X_{t-1}) + 4
+\end{align*}
+
+La autocovarianza,
+
+\begin{align*}
+ \gamma(X_t, X_{t+k}) &= E[(X_t - \mu)(X_{t+k} - \mu)]\\
+ &= E[X_tX_{t+k} - \mu X_{t+k} - \mu X_t + \mu^2]
+ &= E(X_tX_{t+k}) - E(X_t)E(X_{t+k})\\
+ &= E
+\end{align*}
+
+\section{Segundo problema}
+
+El modelo MA(1) con $\theta = 0.5$ tiene la forma
+
+\begin{equation*}
+ X_t = A_t + 0.5 A_{t-1}
+\end{equation*}
+
+La autocorrelación teórica de orden 1 está dada por
+
+\begin{align}
+ \rho_1(X_t) &= \frac{\theta}{1 + \theta^2}\\
+ &= \frac{0.5}{1.5} \\
+ &= 0.4
+\end{align}
+
+Para muestras grandes el estimador de la autocorrelación, $\hat{\rho_1}$ sigue una distribución normal con media $\rho_1$ y varianza 
+$C_{1,1} = (1 - 3\rho^2_1 + 4\rho^4_1)/n$, en donde asumimos $n=1000$. Es decir,
+
+\begin{equation}
+ \hat{\rho_1} \sim \mathscr{N}(0.4, 0.0006224)
+\end{equation}
+
+Para verificar esto simulamos diez mil procesos MA(1) en R con los parámetros arriba detallados y calculamos las autocorrelaciones de orden 1. Esto nos da como
+resultado un arreglo de tamaño 10000 (llamado \verb corrs  en nuestro código) que tiene guardadas cada una de los $\hat{\rho_1}$ de los procesos simulados. 
+Calculamos entonces su media y varianza:
+
+\begin{lstlisting}
+> mean(corrs)
+[1] 0.3983755
+> var(corrs)
+[1] 0.0006095137
+\end{lstlisting}
+
+Observar que coinciden aproximadamente con las media y varianza de la distribución normal descripta en la ecuación (5).
+
+\section{Problema 3}
+
+Analizamos a continuación tres series de tiempo dadas. En la figura 1 podemos ver el gráfico de la primera.
+
+\begin{figure}[htp]
+ \centering
+ \includegraphics[width=.6\textwidth]{ts1}
+ \caption{Primera serie de tiempo.}
+\end{figure}
+
+En los gráficos de la figura 2 podemos ver cómo tanto la autocorrelación como la autocorrelación parcial están dentro del umbral según el cual podemos decidir si 
+una serie de tiempo es ruido blanco, en nuestro caso $2/\sqrt{60} \simeq 0.25$. Luego la serie \verb ts1  fue generada por un proceso de ruido blanco.
+
+\begin{figure}[htp]
+\centering
+\begin{subfigure}{0.7\textwidth}
+\centering
+    \includegraphics[width=0.5\textwidth]{ts1_acf}\hfill
+    \caption{Autocorrelación.}
+    \label{fig:inclu}
+\end{subfigure}%
+\begin{subfigure}{0.7\textwidth}
+\centering
+    \includegraphics[width=0.5\textwidth]{ts1_pacf}
+    \caption{Autocorrelación parcial.}
+    \label{fig:deform}
+\end{subfigure}
+\caption{Autocorrelaciones de la primera serie.}
+\label{fig:manmade}
+\end{figure}
+
+
+La siguiente serie, \verb ts2  , luce como en la figura 3.
+
+\begin{figure}[htp]
+ \centering
+ \includegraphics[width=.6\textwidth]{ts2}
+ \caption{Segunda serie de tiempo.}
+\end{figure}
+
+Las autocorrelación decae mientras que la correlación parcial se anula a partir del 2. Esto implica que el proceso fue generado por un modelo AR(1).
+
+\begin{figure}[htp]
+\centering
+\begin{subfigure}{0.7\textwidth}
+\centering
+    \includegraphics[width=0.5\textwidth]{ts2_acf}\hfill
+    \caption{Autocorrelación.}
+    \label{fig:inclu}
+\end{subfigure}%
+\begin{subfigure}{0.7\textwidth}
+\centering
+    \includegraphics[width=0.5\textwidth]{ts2_pacf}
+    \caption{Autocorrelación parcial.}
+    \label{fig:deform}
+\end{subfigure}
+\caption{Autocorrelaciones de la segunda serie.}
+\label{fig:manmade}
+\end{figure}
+
+Por último, en la figura 5 podemos ver la forma de la tercera serie propuesta.
+
+
+\begin{figure}[htp]
+ \centering
+ \includegraphics[width=.6\textwidth]{ts3}
+ \caption{Tercera serie de tiempo.}
+\end{figure}
+
+Las autocorrelaciones común y parcial son nulas, sugiriendo que al igual que la primera serie \verb ts3  fue gerada por un modelo de ruido blanco.
+
+\begin{figure}[htp]
+\centering
+\begin{subfigure}{0.7\textwidth}
+\centering
+    \includegraphics[width=0.5\textwidth]{ts3_acf}\hfill
+    \caption{Autocorrelación.}
+    \label{fig:inclu}
+\end{subfigure}%
+\begin{subfigure}{0.7\textwidth}
+\centering
+    \includegraphics[width=0.5\textwidth]{ts3_pacf}
+    \caption{Autocorrelación parcial.}
+    \label{fig:deform}
+\end{subfigure}
+\caption{Autocorrelaciones de la tercera serie.}
+\label{fig:manmade}
+\end{figure}
+
+
+\section{Problema 4}
+
+Observar que la autocorrelación oscila y decae, lo que sugiere que fue un modelo autorregresivo el que generó la serie. En cuanto a la autocorrelación
+parcial, podemos
+ver que se anula a partir del tercer ``lag'', por lo tanto el proceso es de orden 2.
+
+\end{document}
